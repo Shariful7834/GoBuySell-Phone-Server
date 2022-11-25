@@ -39,9 +39,8 @@ async function run() {
       .collection("categories");
     const phoneCollections = client
       .db("Gobuysellphone")
-      .collection("phoneCategory");
+      .collection("allusedProducts");
     const userCollection = client.db("Gobuysellphone").collection("users");
-
 
     //get categoris of the used phone from database
 
@@ -51,16 +50,16 @@ async function run() {
       res.send(categories);
     });
 
-
     // Get all used product by category id
 
-    app.get('/categoryUsed/:id', async(req, res)=>{
-      const id = req.params.id
+    app.get("/categoryUsed/:phone_id", async (req, res) => {
+      const id = req.params.phone_id;
       const query = {
-        
-      }
-      const category= await phoneCollections.find
-    } )
+        phone_id: id,
+      };
+      const category = await phoneCollections.find(query).toArray();
+      res.send(category);
+    });
 
     // app.get("/appointmentOptions", async (req, res) => {
     //   const date = req.query.date;
@@ -262,7 +261,7 @@ async function run() {
 }
 run().catch((error) => console.error(error));
 app.get("/", (req, res) => {
-  res.send("Doctor server is running");
+  res.send("GoBUySell server is running");
 });
 
 app.listen(port, () => {
