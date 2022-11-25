@@ -41,6 +41,9 @@ async function run() {
       .db("Gobuysellphone")
       .collection("allusedProducts");
     const userCollection = client.db("Gobuysellphone").collection("users");
+    const bookingsCollection = client
+      .db("Gobuysellphone")
+      .collection("bookings");
 
     //get categoris of the used phone from database
 
@@ -59,6 +62,14 @@ async function run() {
       };
       const category = await phoneCollections.find(query).toArray();
       res.send(category);
+    });
+
+    // Buyer order post
+    app.post("/buyerBookingItems", async (req, res) => {
+      const booking = req.body;
+      const result = await bookingsCollection.insertOne(booking);
+      console.log(result);
+      res.send(result);
     });
 
     // app.get("/appointmentOptions", async (req, res) => {
