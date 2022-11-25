@@ -36,13 +36,31 @@ async function run() {
   try {
     const categoriesCollections = client
       .db("Gobuysellphone")
-      .collection("categoriesCollections");
-    const bookingsCollection = client
-      .db("doctorsportal")
-      .collection("bookings");
+      .collection("categories");
+    const phoneCollections = client
+      .db("Gobuysellphone")
+      .collection("phoneCategory");
     const userCollection = client.db("Gobuysellphone").collection("users");
 
-    const doctorsCollections = client.db("doctorsportal").collection("doctors");
+
+    //get categoris of the used phone from database
+
+    app.get("/categories", async (req, res) => {
+      const query = {};
+      const categories = await categoriesCollections.find(query).toArray();
+      res.send(categories);
+    });
+
+
+    // Get all used product by category id
+
+    app.get('/categoryUsed/:id', async(req, res)=>{
+      const id = req.params.id
+      const query = {
+        
+      }
+      const category= await phoneCollections.find
+    } )
 
     // app.get("/appointmentOptions", async (req, res) => {
     //   const date = req.query.date;
@@ -167,10 +185,10 @@ async function run() {
       const user = await userCollection.findOne(query);
       res.send({ isBuyer: user?.userrole === "Buyer" });
     });
-    
+
     // get sellers from database alluser by email
 
-    app.get("/users/Seller/:email", async (req, res) => {
+    app.get("/users/Seller/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
