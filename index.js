@@ -45,6 +45,10 @@ async function run() {
       .db("Gobuysellphone")
       .collection("bookings");
 
+    const addProductsCollections = client
+      .db("Gobuysellphone")
+      .collection("addproducts");
+
     //get categoris of the used phone from database
 
     app.get("/categories", async (req, res) => {
@@ -217,7 +221,7 @@ async function run() {
 
     // get sellers from database alluser by email
 
-    app.get("/users/Seller/:email", verifyJWT, async (req, res) => {
+    app.get("/users/Seller/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
@@ -270,6 +274,19 @@ async function run() {
     app.post("/doctors", async (req, res) => {
       const doctors = req.body;
       const result = await doctorsCollections.insertOne(doctors);
+      res.send(result);
+    });
+    // add products from seller
+    app.post("/addproducts", async (req, res) => {
+      const addproducts = req.body;
+      const result = await addProductsCollections.insertOne(addproducts);
+      res.send(result);
+    });
+    // get all added products
+
+    app.get("/myproducts", async (req, res) => {
+      const query = {};
+      const result = await addProductsCollections.find(query).toArray();
       res.send(result);
     });
 
