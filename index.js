@@ -290,13 +290,6 @@ async function run() {
       res.send(result);
     });
 
-    // get all doctors
-    app.get("/managedoctors", async (req, res) => {
-      const query = {};
-      const result = await doctorsCollections.find(query).toArray();
-      res.send(result);
-    });
-
     app.delete("/managedoctors/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
