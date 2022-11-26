@@ -64,12 +64,31 @@ async function run() {
       res.send(category);
     });
 
-    // Buyer order post
+    // Post Buyer orders
     app.post("/buyerBookingItems", async (req, res) => {
       const booking = req.body;
+      // const query = {
+      //   email: email.booking,
+      // };
+      // const alreadyBooked = await bookingsCollection.find(query).toArray();
+      // if (alreadyBooked.length > 0) {
+      //   const message = `You already booked`;
+      //   return res.send({ acknowledge: false, message });
+      // }
       const result = await bookingsCollection.insertOne(booking);
       console.log(result);
       res.send(result);
+    });
+
+    // Get Buyer orders
+    app.get("/buyerorders", async (req, res) => {
+      const email = req.query.email;
+      const query = {
+        email: email,
+      };
+      const orders = await bookingsCollection.find(query).toArray();
+      console.log(orders);
+      res.send(orders);
     });
 
     // app.get("/appointmentOptions", async (req, res) => {
