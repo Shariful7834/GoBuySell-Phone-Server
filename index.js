@@ -72,13 +72,13 @@ async function run() {
       });
     });
     // Payment
-    app.post("/payments", verifyJWT, async (req, res) => {
-      const decodedEmail = req.decoded.email;
-      const query = { email: decodedEmail };
-      const user = await userCollection.findOne(query);
-      if (user.role !== "Buyer") {
-        return res.status(403).send({ message: "forbidden access" });
-      }
+    app.post("/payments", async (req, res) => {
+      // const decodedEmail = req.decoded.email;
+      // const query = { email: decodedEmail };
+      // const user = await userCollection.findOne(query);
+      // if (user.userrole !== "Buyer") {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
       const payment = req.body;
       const result = await paymentCollections.insertOne(payment);
       const id = payment.bookingId;
@@ -281,6 +281,12 @@ async function run() {
       const user = await userCollection.findOne(query);
       res.send({ isSeller: user?.userrole === "Seller" });
     });
+    app.get("/users/Seller/:userrole", async (req, res) => {
+      const userrole = req.params.userrole;
+      const query = { userrole: userrole };
+      const user = await userCollection.find(query).toArray();
+      res.send(user);
+    });
 
     // update user as admin
 
@@ -308,28 +314,21 @@ async function run() {
       res.send(result);
     });
 
-    // Delete user from database as admin
-
-    app.delete("/users/admin/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const result = await userCollection.deleteOne(query);
-      res.send(result);
-      console.log(result);
-    });
-
     // insert users in the database
     app.post("/users", async (req, res) => {
       const users = req.body;
       const result = await userCollection.insertOne(users);
       res.send(result);
     });
-    // Post doctors
-    app.post("/doctors", async (req, res) => {
-      const doctors = req.body;
-      const result = await doctorsCollections.insertOne(doctors);
+
+    // delete user from dashboard admin page
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
       res.send(result);
     });
+
     // add products from seller
     app.post("/addproducts", async (req, res) => {
       const addproducts = req.body;
@@ -366,14 +365,6 @@ async function run() {
         },
       };
       const result = await addProductsCollections.updateOne(query, updateDoc);
-      res.send(result);
-    });
-
-    //
-    app.delete("/managedoctors/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const result = await doctorsCollections.deleteOne(query);
       res.send(result);
     });
   } finally {
