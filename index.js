@@ -5,6 +5,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SECRETE_KEY);
+
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -49,6 +51,44 @@ async function run() {
       .db("Gobuysellphone")
       .collection("addproducts");
 
+    const paymentCollections = client
+      .db("Gobuysellphone")
+      .collection("payments");
+
+    // payment intent
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const booking = req.body;
+      const price = booking.price;
+      const amount = price * 100;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: "usd",
+        amount: amount,
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+    // Payment
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const result = await paymentCollections.insertOne(payment);
+      const id = payment.bookingId;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      const updatedResult = await bookingsCollection.updateOne(
+        filter,
+        updateDoc
+      );
+      res.send(result);
+    });
     //get categoris of the used phone from database
 
     app.get("/categories", async (req, res) => {
@@ -93,6 +133,14 @@ async function run() {
       const orders = await bookingsCollection.find(query).toArray();
       console.log(orders);
       res.send(orders);
+    });
+
+    // buyer booking by id
+    app.get("/buyerorders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const paymentOrder = await bookingsCollection.findOne(query);
+      res.send(paymentOrder);
     });
 
     // app.get("/appointmentOptions", async (req, res) => {
@@ -285,11 +333,37 @@ async function run() {
     // get all added products
 
     app.get("/myproducts", async (req, res) => {
-      const query = {};
+      const email = req.query.email;
+      const query = {
+        email: email,
+      };
       const result = await addProductsCollections.find(query).toArray();
       res.send(result);
     });
+    // deleting product
+    app.delete("/manageproducts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await addProductsCollections.deleteOne(query);
+      res.send(result);
+    });
 
+    // Update status of product
+
+    app.patch("/manageproducts/:id", async (req, res) => {
+      const id = req.params.id;
+      const status = req.body.status;
+      const query = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: status,
+        },
+      };
+      const result = await addProductsCollections.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    //
     app.delete("/managedoctors/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
