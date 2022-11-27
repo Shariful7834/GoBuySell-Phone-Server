@@ -72,7 +72,13 @@ async function run() {
       });
     });
     // Payment
-    app.post("/payments", async (req, res) => {
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await userCollection.findOne(query);
+      if (user.role !== "Buyer") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
       const payment = req.body;
       const result = await paymentCollections.insertOne(payment);
       const id = payment.bookingId;
