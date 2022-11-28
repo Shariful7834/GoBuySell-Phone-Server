@@ -54,6 +54,26 @@ async function run() {
     const paymentCollections = client
       .db("Gobuysellphone")
       .collection("payments");
+    const questionsCollections = client
+      .db("Gobuysellphone")
+      .collection("Questions");
+
+    //Get question
+    app.get("/questions", async (req, res) => {
+      const query = {};
+      const questions = await questionsCollections.find(query).toArray();
+      res.send(questions);
+    });
+
+    // get advertisement items
+
+    app.get("/advertisements", async (req, res) => {
+      const email = req.query.email;
+      const query = {
+        email: email,
+      };
+      const result = await addProductsCollections.find(query).toArray();
+    });
 
     // payment intent
 
@@ -149,90 +169,6 @@ async function run() {
       res.send(paymentOrder);
     });
 
-    // app.get("/appointmentOptions", async (req, res) => {
-    //   const date = req.query.date;
-    //   console.log(date);
-    //   const query = {};
-    //   const options = await appointmentCollection.find(query).toArray();
-    //   const bookingQuery = { appointmentDate: date };
-    //   const alreadyBooked = await bookingsCollection
-    //     .find(bookingQuery)
-    //     .toArray();
-    //   // code carefully
-    //   options.forEach((option) => {
-    //     const optionBooked = alreadyBooked.filter(
-    //       (book) => book.treatment === option.name
-    //     );
-    //     const bookedSlots = optionBooked.map((book) => book.slots);
-    //     const remainingSlots = option.slots.filter(
-    //       (slot) => !bookedSlots.includes(slot)
-    //     );
-    //     option.slots = remainingSlots;
-    //     // console.log(date, option.name, bookedSlots, remainingSlots.length);
-    //   });
-    //   // console.log(result);
-    //   res.send(options);
-    // });
-
-    // find a specific name, price or anything
-
-    // app.get("/appointmentSpecialty", async (req, res) => {
-    //   const query = {};
-    //   const result = await appointmentCollection
-    //     .find(query)
-    //     .project({ name: 1 })
-    //     .toArray();
-    //   res.send(result);
-    // });
-
-    // node MOngoDb Naming Convenstion
-
-    // bookings API
-    // app.get('/bookings')
-    // app.get('/bookings/:id')
-    // app.post('/bookings')
-    // app.patch('/bookings/:id)
-    // app.delete('/bookings/:id)
-
-    // app.post("/bookings", async (req, res) => {
-    //   const booking = req.body;
-
-    //   const query = {
-    //     appointmentDate: booking.appointmentDate,
-    //     treatment: booking.treatment,
-    //     email: booking.email,
-    //   };
-    //   const alreadyBooked = await bookingsCollection.find(query).toArray();
-
-    //   if (alreadyBooked.length) {
-    //     const message = `you already have a booking on ${booking.appointmentDate}`;
-    //     return res.send({ acknoledged: false, message });
-    //   }
-
-    //   const result = await bookingsCollection.insertOne(booking);
-    //   console.log(result);
-    //   res.send(result);
-    // });
-
-    // get booking info from mongoDb
-
-    // app.get("/bookings", verifyJWT, async (req, res) => {
-    //   const decoded = req.decoded;
-    //   console.log("inside booking api", decoded);
-
-    //   if (decoded.email !== req.query.email) {
-    //     res.status(401).send({ message: "Unauthorized access" });
-    //   }
-    //   const email = req.query.email;
-    //   const query = {
-    //     email: email,
-    //   };
-    //   const bookings = await bookingsCollection.find(query).toArray();
-    //   res.send(bookings);
-    // });
-
-    // send user info to the database
-
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
       const query = {
@@ -272,6 +208,12 @@ async function run() {
       const user = await userCollection.findOne(query);
       res.send({ isBuyer: user?.userrole === "Buyer" });
     });
+    app.get("/users/:userrole", async (req, res) => {
+      const userrole = req.params.userrole;
+      const query = { userrole: "Buyer" };
+      const user = await userCollection.find(query).toArray();
+      res.send(user);
+    });
 
     // get sellers from database alluser by email
 
@@ -304,6 +246,32 @@ async function run() {
       const updatedDoc = {
         $set: {
           role: "admin",
+        },
+      };
+      const result = await userCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    // verify seller
+
+    app.put("/users/seller/:id", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await userCollection.findOne(query);
+      if (user.userrole !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          userrole: "Seller",
         },
       };
       const result = await userCollection.updateOne(
