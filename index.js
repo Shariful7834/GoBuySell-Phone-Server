@@ -57,6 +57,9 @@ async function run() {
     const questionsCollections = client
       .db("Gobuysellphone")
       .collection("Questions");
+    const advertisementsCollections = client
+      .db("Gobuysellphone")
+      .collection("advertisements");
 
     //Get question
     app.get("/questions", async (req, res) => {
@@ -67,12 +70,30 @@ async function run() {
 
     // get advertisement items
 
-    app.get("/advertisements", async (req, res) => {
-      const email = req.query.email;
-      const query = {
-        email: email,
+    app.post("/advertisements", async (req, res) => {
+      const ads = req.body;
+      const result = await advertisementsCollections.insertOne(ads);
+      const id = ads._id;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          advertisement: true,
+        },
       };
-      const result = await addProductsCollections.find(query).toArray();
+      const updatedResult = await advertisementsCollections.updateOne(
+        filter,
+        updateDoc
+      );
+      res.send(updatedResult);
+      res.send(result);
+    });
+
+    // Get advertise product on home page
+
+    app.get("/advertisements", async (req, res) => {
+      const query = {};
+      const result = await advertisementsCollections.find(query).toArray();
+      res.send(result);
     });
 
     // payment intent
@@ -344,5 +365,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`System running on the port ${port}`);
+  console.log(`GoBuysell used phone Server running on the port ${port}`);
 });
